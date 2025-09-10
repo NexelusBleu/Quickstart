@@ -1,5 +1,7 @@
 package org.firstinspires.ftc.teamcode.TeleOp;
 
+import com.bylazar.graph.GraphManager;
+import com.bylazar.telemetry.TelemetryManager;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
@@ -15,9 +17,12 @@ public class MecanumDriveCodeFieldCentric extends OpMode {
     double dAngle;
     double dt;
 
-    ElapsedTime timer = new ElapsedTime();
-    MecanumPIDFunctions headingPID = new MecanumPIDFunctions();
-    TeleOpHardWare robot = new TeleOpHardWare();
+    ElapsedTime timer;
+    MecanumPIDFunctions headingPID;
+    TeleOpHardWare robot;
+    TelemetryManager panelsTelemetry;
+    GraphManager panelsGraph;
+
     IMU imu;
 
     @Override
@@ -27,9 +32,16 @@ public class MecanumDriveCodeFieldCentric extends OpMode {
                 new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.LEFT));
+
+        panelsTelemetry.debug();
+        panelsTelemetry.update();
+
         imu.resetYaw();
+
         timer.reset();
+
         robot.init(hardwareMap);
+
         imu.initialize(parameters);
 
     }
@@ -75,10 +87,10 @@ public class MecanumDriveCodeFieldCentric extends OpMode {
         robot.frontRight.setPower(frontRightPower);
         robot.backRight.setPower(backRightPower);
 
-        telemetry.addData("wanted angle",Math.toDegrees(dAngle));
-        telemetry.addData("Current angle;",Math.toDegrees(botHeading));
-        telemetry.addData("right x stick ", gamepad1.right_stick_x);
-        telemetry.addData("wheel powers", String.valueOf(frontRightPower), frontLeftPower, backLeftPower, backRightPower);
-        telemetry.update();
+        panelsTelemetry.debug();
+        panelsGraph.addData("PID Output", PIDOutput);
+        panelsGraph.addData("Current Angle", botHeading);
+        panelsGraph.addData("Wanted Angle", dAngle);
+        panelsGraph.update();
     }
 }
