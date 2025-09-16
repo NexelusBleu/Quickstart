@@ -1,40 +1,53 @@
 package org.firstinspires.ftc.teamcode.TeleOp;
 
-import com.bylazar.graph.GraphManager;
-import com.bylazar.telemetry.TelemetryManager;
+
+import android.util.Size;
 import com.qualcomm.hardware.rev.RevHubOrientationOnRobot;
 import com.qualcomm.robotcore.eventloop.opmode.OpMode;
 import com.qualcomm.robotcore.eventloop.opmode.TeleOp;
 import com.qualcomm.robotcore.hardware.IMU;
 import com.qualcomm.robotcore.util.ElapsedTime;
+import org.firstinspires.ftc.robotcore.external.hardware.camera.WebcamName;
 import org.firstinspires.ftc.robotcore.external.navigation.AngleUnit;
 import org.firstinspires.ftc.teamcode.utilities.MathFunction;
-
+import org.firstinspires.ftc.vision.VisionPortal;
+import org.firstinspires.ftc.vision.apriltag.AprilTagDetection;
+import org.firstinspires.ftc.vision.apriltag.AprilTagProcessor;
 
 @TeleOp
 public class MecanumDriveCodeFieldCentric extends OpMode {
 
     double dAngle;
     double dt;
+    double lastBearing;
+    double currentBearing;
+    boolean RBToggleState = false;
+    boolean RBLastState = false;
 
-    ElapsedTime timer;
-    MecanumPIDFunctions headingPID;
-    TeleOpHardWare robot;
-    TelemetryManager panelsTelemetry;
-    GraphManager panelsGraph;
-
+    ElapsedTime timer = new ElapsedTime();
+    MecanumPIDFunctions headingPID = new MecanumPIDFunctions();
+    TeleOpHardWare robot = new TeleOpHardWare();
+    AprilTagProcessor tagProcessor;
+    VisionPortal visionPortal;
     IMU imu;
+
 
     @Override
     public void init() {
         imu = hardwareMap.get(IMU.class, "imu");
+        tagProcessor = new AprilTagProcessor.Builder()
+                .build();
+
+        visionPortal = new VisionPortal.Builder()
+                .addProcessor(tagProcessor)
+                .setCamera(hardwareMap.get(WebcamName.class, "fWebCam"))
+                .setCameraResolution(new Size(640, 480))
+                .build();
+
         IMU.Parameters parameters = new IMU.Parameters(
                 new RevHubOrientationOnRobot(
                 RevHubOrientationOnRobot.LogoFacingDirection.UP,
                 RevHubOrientationOnRobot.UsbFacingDirection.LEFT));
-
-        panelsTelemetry.debug();
-        panelsTelemetry.update();
 
         imu.resetYaw();
 
@@ -52,10 +65,17 @@ public class MecanumDriveCodeFieldCentric extends OpMode {
         timer.reset();
 
         //setting up gamepad inputs
-        double y = -gamepad1.left_stick_y;
-        double x = gamepad1.left_stick_x;  
-        double tR = -gamepad1.right_stick_x * Math.toRadians(90);
+        double y = -gamepad1.left_stick_y/3;
+        double x = gamepad1.left_stick_x/3;
+        double tR = -gamepad1.right_stick_x * Math.toRadians(130);
+        boolean RBC = gamepad1.right_bumper;
         tR = MathFunction.angleWrap(tR);
+
+
+        if(RBC & !RBLastState){
+            RBToggleState = !RBToggleState;
+        }
+        RBLastState = RBC;
 
         //this will allows the drive to reset the imu angle
         if(gamepad1.options) {
@@ -63,16 +83,23 @@ public class MecanumDriveCodeFieldCentric extends OpMode {
         }
         double botHeading = imu.getRobotYawPitchRollAngles().getYaw(AngleUnit.RADIANS);
         botHeading = MathFunction.angleWrap(botHeading);
+        
 
-        dAngle += tR * dt;
+
+        if(!RBToggleState) {
+            dAngle += tR * dt;
+        }
+        telemetry.addData("bumper toggle", RBToggleState);
+
         dAngle = MathFunction.angleWrap(dAngle);
+        telemetry.addData("dangle", dAngle);
 
         double PIDOutput = headingPID.MPIDUpdate(dAngle, botHeading, dt);
 
         double rotX = x * Math.cos(- botHeading) - y * Math.sin(-botHeading);
         double rotY = x * Math.sin(-botHeading) + y * Math.cos(-botHeading);
 
-        rotX *= 1.1; //This accounts for how strafing feels different
+        rotX *= 1.3; //This accounts for how strafing feels different
 
         //doing the math for each wheel
         double denominator = Math.max(Math.abs(rotY) + Math.abs(rotX) + Math.abs(PIDOutput), 1);
@@ -87,10 +114,10 @@ public class MecanumDriveCodeFieldCentric extends OpMode {
         robot.frontRight.setPower(frontRightPower);
         robot.backRight.setPower(backRightPower);
 
-        panelsTelemetry.debug();
-        panelsGraph.addData("PID Output", PIDOutput);
-        panelsGraph.addData("Current Angle", botHeading);
-        panelsGraph.addData("Wanted Angle", dAngle);
-        panelsGraph.update();
+
+    lastBearing = currentBearing;
+    telemetry.addData("cangle", botHeading);
+    telemetry.addData("dAngle", dAngle);
+    telemetry.update();
     }
 }
