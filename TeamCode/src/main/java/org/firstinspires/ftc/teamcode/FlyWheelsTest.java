@@ -103,8 +103,8 @@ public class FlyWheelsTest extends OpMode {
         double topPidOutput = flywheelPID.MPIDUpdate(targetTopRPM, currentTopRPM, deltaTime);
         double bottomPidOutput = flywheelPID.MPIDUpdate(targetBottomRPM, currentBottomRPM, deltaTime);
 
-        robot.topFlywheel.setPower(topPidOutput);
-        robot.bottomFlywheel.setPower(bottomPidOutput);
+        robot.topFlywheel.setPower(1);
+        robot.bottomFlywheel.setPower(1);
 
         bottomLastTicks = bottomCurrentTicks;
         topLastTicks = topCurrentTicks;

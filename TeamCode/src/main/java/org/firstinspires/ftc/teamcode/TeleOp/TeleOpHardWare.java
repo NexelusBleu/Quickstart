@@ -1,6 +1,9 @@
 package org.firstinspires.ftc.teamcode.TeleOp;
 
+import android.hardware.Sensor;
+
 import com.qualcomm.robotcore.hardware.CRServo;
+import com.qualcomm.robotcore.hardware.ColorSensor;
 import com.qualcomm.robotcore.hardware.DcMotor;
 import com.qualcomm.robotcore.hardware.DcMotorEx;
 import com.qualcomm.robotcore.hardware.DcMotorSimple;
@@ -9,7 +12,8 @@ import com.qualcomm.robotcore.hardware.HardwareMap;
 public class TeleOpHardWare {
 
     public DcMotor frontLeft, frontRight, backLeft, backRight, linearSlider, topFlywheel, bottomFlywheel;
-    public CRServo topFrontWheel;  // <-- you needed this
+    public CRServo topFrontWheel,topBackWheel, bottomBackWheel, bottomFrontWheel;
+    public ColorSensor colorSensor;
 
     public void init(HardwareMap hwMap){
 
@@ -29,11 +33,6 @@ public class TeleOpHardWare {
         backRight.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         backRight.setDirection(DcMotorSimple.Direction.REVERSE);
 
-        linearSlider = hwMap.get(DcMotorEx.class, "linearSlider");
-        linearSlider.setDirection(DcMotorSimple.Direction.REVERSE);
-        linearSlider.setMode(DcMotor.RunMode.STOP_AND_RESET_ENCODER);
-        linearSlider.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
-
         topFlywheel = hwMap.get(DcMotorEx.class, "topFlywheel");
         topFlywheel.setMode(DcMotor.RunMode.RUN_WITHOUT_ENCODER);
         topFlywheel.setDirection(DcMotorSimple.Direction.FORWARD);
@@ -44,5 +43,11 @@ public class TeleOpHardWare {
 
         // your CR servo
         topFrontWheel = hwMap.get(CRServo.class, "topFrontWheel");
+        topBackWheel = hwMap.get(CRServo.class, "topBackWheel");
+        bottomFrontWheel = hwMap.get(CRServo.class, "bottomFrontWheel");
+        bottomBackWheel = hwMap.get(CRServo.class, "bottomBackWheel");
+
+        //sensors
+        colorSensor = hwMap.get(ColorSensor.class, "colorSensor");
     }
 }
